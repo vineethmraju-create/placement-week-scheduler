@@ -1,0 +1,798 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>
+        Placement Week Scheduler
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='style.css') }}"
+    >
+
+</head>
+
+<body>
+
+<div class="container">
+
+
+    <!-- ===================================================== -->
+    <!-- HEADER -->
+    <!-- ===================================================== -->
+
+    <header>
+
+        <div>
+
+            <h1>
+                Placement Week Scheduler
+            </h1>
+
+            <p>
+                Coordinator Dashboard
+            </p>
+
+        </div>
+
+        <div class="status-badge">
+            LIVE
+        </div>
+
+    </header>
+
+
+    <!-- ===================================================== -->
+    <!-- FLASH MESSAGES -->
+    <!-- ===================================================== -->
+
+    {% with messages = get_flashed_messages() %}
+
+        {% if messages %}
+
+            {% for message in messages %}
+
+                <div class="success flash-message">
+                    {{ message }}
+                </div>
+
+            {% endfor %}
+
+        {% endif %}
+
+    {% endwith %}
+
+
+    <!-- ===================================================== -->
+    <!-- SUMMARY CARDS -->
+    <!-- ===================================================== -->
+
+    <section class="cards">
+
+        <div class="card">
+
+            <h3>
+                Scheduled
+            </h3>
+
+            <p>
+                {{ scheduled_interviews }}
+            </p>
+
+        </div>
+
+
+        <div class="card">
+
+            <h3>
+                Unscheduled
+            </h3>
+
+            <p>
+                {{ unscheduled_interviews }}
+            </p>
+
+        </div>
+
+
+        <div class="card">
+
+            <h3>
+                Cancelled
+            </h3>
+
+            <p>
+                {{ cancelled_interviews }}
+            </p>
+
+        </div>
+
+
+        <div class="card">
+
+            <h3>
+                Companies
+            </h3>
+
+            <p>
+                {{ companies }}
+            </p>
+
+        </div>
+
+
+        <div class="card">
+
+            <h3>
+                Students
+            </h3>
+
+            <p>
+                {{ students }}
+            </p>
+
+        </div>
+
+
+        <div class="card">
+
+            <h3>
+                Available Rooms
+            </h3>
+
+            <p>
+                {{ available_rooms }}
+            </p>
+
+        </div>
+
+    </section>
+
+
+    <!-- ===================================================== -->
+    <!-- CURRENT ALERTS -->
+    <!-- ===================================================== -->
+
+    <section class="panel">
+
+        <h2>
+            Current Alerts
+        </h2>
+
+
+        {% if unavailable_rooms > 0 %}
+
+            <div class="alert">
+
+                {{ unavailable_rooms }}
+                room(s) unavailable
+
+            </div>
+
+        {% endif %}
+
+
+        {% if unavailable_panels > 0 %}
+
+            <div class="alert">
+
+                {{ unavailable_panels }}
+                panel(s) unavailable
+
+            </div>
+
+        {% endif %}
+
+
+        {% if unscheduled_interviews > 0 %}
+
+            <div class="alert">
+
+                {{ unscheduled_interviews }}
+                interview(s) require attention
+
+            </div>
+
+        {% endif %}
+
+
+        {% if
+            unavailable_rooms == 0
+            and unavailable_panels == 0
+            and unscheduled_interviews == 0
+        %}
+
+            <div class="success">
+
+                No active scheduling alerts.
+
+            </div>
+
+        {% endif %}
+
+    </section>
+
+
+    <!-- ===================================================== -->
+    <!-- SCHEDULE PERFORMANCE -->
+    <!-- ===================================================== -->
+
+    <section class="panel">
+
+        <h2>
+            Schedule Performance
+        </h2>
+
+        <p class="section-description">
+            Key metrics used to evaluate the quality
+            of the current placement schedule.
+        </p>
+
+
+        <div class="replan-summary">
+
+            <div class="replan-item">
+
+                <span>
+                    Scheduling Success
+                </span>
+
+                <strong>
+                    {{ schedule_metrics.scheduling_rate }}%
+                </strong>
+
+            </div>
+
+
+            <div class="replan-item">
+
+                <span>
+                    Room Utilization
+                </span>
+
+                <strong>
+                    {{ schedule_metrics.room_utilization }}%
+                </strong>
+
+            </div>
+
+
+            <div class="replan-item">
+
+                <span>
+                    Student Conflicts
+                </span>
+
+                <strong>
+                    {{ schedule_metrics.student_conflicts }}
+                </strong>
+
+            </div>
+
+
+            <div class="replan-item">
+
+                <span>
+                    Avg. Waiting Time
+                </span>
+
+                <strong>
+                    {{ schedule_metrics.average_waiting_time }} min
+                </strong>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- ===================================================== -->
+    <!-- RECENT REPLAN SUMMARY -->
+    <!-- ===================================================== -->
+
+    {% if latest_replan %}
+
+    <section class="panel">
+
+        <div class="panel-heading">
+
+            <div>
+
+                <h2>
+                    Recent Replan Summary
+                </h2>
+
+                <p class="section-description">
+
+                    Latest disruption:
+
+                    <strong>
+                        {{ latest_replan.type }}
+                    </strong>
+
+                </p>
+
+            </div>
+
+
+            <form
+                action="{{ url_for('clear_replan') }}"
+                method="POST"
+            >
+
+                <button
+                    type="submit"
+                    class="secondary-button"
+                >
+                    Clear
+                </button>
+
+            </form>
+
+        </div>
+
+
+        <div class="replan-summary">
+
+            <div class="replan-item">
+
+                <span>
+                    Affected
+                </span>
+
+                <strong>
+                    {{ latest_replan.affected }}
+                </strong>
+
+            </div>
+
+
+            <div class="replan-item">
+
+                <span>
+                    Successfully Moved
+                </span>
+
+                <strong>
+                    {{ latest_replan.moved }}
+                </strong>
+
+            </div>
+
+
+            <div class="replan-item">
+
+                <span>
+                    Unscheduled
+                </span>
+
+                <strong>
+                    {{ latest_replan.unscheduled }}
+                </strong>
+
+            </div>
+
+
+            <div class="replan-item">
+
+                <span>
+                    Replan Churn
+                </span>
+
+                <strong>
+                    {{ latest_replan.churn }}%
+                </strong>
+
+            </div>
+
+        </div>
+
+    </section>
+
+    {% endif %}
+
+
+    <!-- ===================================================== -->
+    <!-- UPCOMING INTERVIEWS -->
+    <!-- ===================================================== -->
+
+    <section class="panel">
+
+        <h2>
+            Upcoming Interviews
+        </h2>
+
+
+        <div class="table-wrapper">
+
+            <table>
+
+                <thead>
+
+                    <tr>
+
+                        <th>
+                            Interview
+                        </th>
+
+                        <th>
+                            Student
+                        </th>
+
+                        <th>
+                            Company
+                        </th>
+
+                        <th>
+                            Day
+                        </th>
+
+                        <th>
+                            Time
+                        </th>
+
+                        <th>
+                            Room
+                        </th>
+
+                        <th>
+                            Panel
+                        </th>
+
+                    </tr>
+
+                </thead>
+
+
+                <tbody>
+
+                {% for interview in upcoming_interviews %}
+
+                    <tr>
+
+                        <td>
+                            {{ interview.id }}
+                        </td>
+
+                        <td>
+                            {{ interview.student.name }}
+                        </td>
+
+                        <td>
+                            {{ interview.company.name }}
+                        </td>
+
+                        <td>
+                            Day {{ interview.day }}
+                        </td>
+
+                        <td>
+                            {{ interview.start_time }}
+                            -
+                            {{ interview.end_time }}
+                        </td>
+
+                        <td>
+                            {{ interview.room.name }}
+                        </td>
+
+                        <td>
+                            {{ interview.panel.id }}
+                            -
+                            {{ interview.panel.name }}
+                        </td>
+
+                    </tr>
+
+                {% else %}
+
+                    <tr>
+
+                        <td colspan="7">
+
+                            No scheduled interviews found.
+
+                        </td>
+
+                    </tr>
+
+                {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </section>
+
+
+    <!-- ===================================================== -->
+    <!-- DISRUPTION CONTROLS -->
+    <!-- ===================================================== -->
+
+    <section class="panel">
+
+        <h2>
+            Disruption Controls
+        </h2>
+
+        <p class="section-description">
+
+            Trigger a placement disruption.
+            The replanner preserves unaffected interviews
+            and attempts to repair only the affected schedule.
+
+        </p>
+
+
+        <div class="disruption-grid">
+
+
+            <!-- COMPANY DELAY -->
+
+            <div class="disruption-card">
+
+                <h3>
+                    Company Delay
+                </h3>
+
+                <p>
+                    Replan interviews when a company arrives late.
+                </p>
+
+
+                <form
+                    action="{{ url_for('company_delay_route') }}"
+                    method="POST"
+                    class="action-form vertical-form"
+                >
+
+                    <select
+                        name="company_id"
+                        required
+                    >
+
+                        <option value="">
+                            Select Company
+                        </option>
+
+
+                        {% for company in all_companies %}
+
+                            <option
+                                value="{{ company.id }}"
+                            >
+
+                                {{ company.id }}
+                                -
+                                {{ company.name }}
+
+                            </option>
+
+                        {% endfor %}
+
+                    </select>
+
+
+                    <input
+                        type="number"
+                        name="delay_hours"
+                        placeholder="Delay Hours"
+                        min="1"
+                        required
+                    >
+
+
+                    <select
+                        name="disruption_day"
+                        required
+                    >
+
+                        <option value="">
+                            Select Day
+                        </option>
+
+                        <option value="1">
+                            Day 1
+                        </option>
+
+                        <option value="2">
+                            Day 2
+                        </option>
+
+                        <option value="3">
+                            Day 3
+                        </option>
+
+                        <option value="4">
+                            Day 4
+                        </option>
+
+                    </select>
+
+
+                    <button type="submit">
+                        Replan Company Delay
+                    </button>
+
+                </form>
+
+            </div>
+
+
+            <!-- PANEL DROP -->
+
+            <div class="disruption-card">
+
+                <h3>
+                    Panel Drop
+                </h3>
+
+                <p>
+                    Reassign interviews when a panel becomes unavailable.
+                </p>
+
+
+                <form
+                    action="{{ url_for('drop_panel_route') }}"
+                    method="POST"
+                    class="action-form vertical-form"
+                >
+
+                    <select
+                        name="panel_id"
+                        required
+                    >
+
+                        <option value="">
+                            Select Panel
+                        </option>
+
+
+                        {% for panel in all_panels %}
+
+                            <option
+                                value="{{ panel.id }}"
+                            >
+
+                                {{ panel.id }}
+                                -
+                                {{ panel.name }}
+
+                                {% if not panel.available %}
+                                    (Unavailable)
+                                {% endif %}
+
+                            </option>
+
+                        {% endfor %}
+
+                    </select>
+
+
+                    <button type="submit">
+                        Drop Panel & Replan
+                    </button>
+
+                </form>
+
+            </div>
+
+
+            <!-- STUDENT WITHDRAWAL -->
+
+            <div class="disruption-card">
+
+                <h3>
+                    Student Withdrawal
+                </h3>
+
+                <p>
+                    Cancel remaining interviews for a student
+                    who withdraws from placement.
+                </p>
+
+
+                <form
+                    action="{{ url_for('withdraw_student_route') }}"
+                    method="POST"
+                    class="action-form vertical-form"
+                >
+
+                    <input
+                        type="number"
+                        name="student_id"
+                        placeholder="Student ID"
+                        min="1"
+                        required
+                    >
+
+
+                    <button type="submit">
+                        Withdraw Student
+                    </button>
+
+                </form>
+
+            </div>
+
+
+            <!-- ROOM UNAVAILABLE -->
+
+            <div class="disruption-card">
+
+                <h3>
+                    Room Unavailable
+                </h3>
+
+                <p>
+                    Move interviews when an interview room
+                    becomes unavailable.
+                </p>
+
+
+                <form
+                    action="{{ url_for('disable_room_route') }}"
+                    method="POST"
+                    class="action-form vertical-form"
+                >
+
+                    <select
+                        name="room_id"
+                        required
+                    >
+
+                        <option value="">
+                            Select Room
+                        </option>
+
+
+                        {% for room in all_rooms %}
+
+                            <option
+                                value="{{ room.id }}"
+                            >
+
+                                {{ room.id }}
+                                -
+                                {{ room.name }}
+
+                                {% if not room.available %}
+                                    (Unavailable)
+                                {% endif %}
+
+                            </option>
+
+                        {% endfor %}
+
+                    </select>
+
+
+                    <button type="submit">
+                        Disable Room & Replan
+                    </button>
+
+                </form>
+
+            </div>
+
+        </div>
+
+    </section>
+
+</div>
+
+</body>
+
+</html>
