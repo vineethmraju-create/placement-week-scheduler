@@ -159,4 +159,16 @@ Number of overlapping interviews assigned to the same student.
 The target value is:
 
 ```text
-0
+## Screenshots
+
+### Coordinator Dashboard
+![Coordinator Dashboard](screenshots/dashboard.png)
+
+### Interview Schedule
+![Interview Schedule](screenshots/schedule.png)
+
+### Disruption Controls
+![Disruption Controls](screenshots/disruption-controls.png)
+
+### Dynamic Replanning Result
+![Dynamic Replanning Result](screenshots/replanning-result.png)
