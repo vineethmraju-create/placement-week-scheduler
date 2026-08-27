@@ -158,7 +158,7 @@ Number of overlapping interviews assigned to the same student.
 
 The target value is:
 
-```text
+
 ## Screenshots
 
 ### Coordinator Dashboard
